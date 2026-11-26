@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#102421">
+  <meta name="description" content="苔光守卫，一款可自由替换角色、怪物和场景图片的原创动作小游戏。">
+  <title>苔光守卫</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="config.js"></script>
+  <script defer src="engine.js"></script>
+  <script defer src="game.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="shell header-content">
+      <a class="brand" href="./" aria-label="苔光守卫首页">
+        <span class="brand-mark" aria-hidden="true">✦</span> 苔光守卫
+      </a>
+      <div class="header-actions">
+        <button class="button outline" type="button" id="assets-button">替换素材</button>
+        <button class="button outline" type="button" id="pause-button" disabled>暂停</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="shell">
+    <div class="intro">
+      <h1>苔光守卫</h1>
+      <p>守住林间灯火，击退三波苔泥怪。</p>
+    </div>
+
+    <div class="game-layout">
+      <section class="play-panel" aria-label="游戏区域">
+        <div class="hud">
+          <div class="hud-item health-hud">
+            <span>生命</span>
+            <div id="hearts" class="hearts" aria-label="5 格生命"></div>
+          </div>
+          <div class="hud-item">
+            <span>波次</span>
+            <strong id="wave">1 / 3</strong>
+          </div>
+          <div class="hud-item hud-score">
+            <span>得分</span>
+            <strong id="score">0</strong>
+          </div>
+        </div>
+        <div id="arena" class="arena">
+          <canvas id="field" aria-label="苔光守卫战场" aria-describedby="controls-help"></canvas>
+          <div class="wave-banner" id="wave-banner" aria-hidden="true" hidden></div>
+          <div class="game-overlay" id="overlay">
+            <div class="overlay-panel">
+              <span class="overlay-mark" aria-hidden="true">✦</span>
+              <h2 id="overlay-title">准备迎战</h2>
+              <p id="overlay-copy">在苔林里移动，等怪物靠近，再用灯刃把它们击退。</p>
+              <button class="button primary" id="play" type="button">开始游戏 <span aria-hidden="true">→</span></button>
+            </div>
+          </div>
+        </div>
+        <div class="touch-controls" aria-label="触控操作">
+          <div class="dpad" aria-label="移动">
+            <button type="button" data-direction="left" aria-label="向左">←</button>
+            <button type="button" data-direction="up" aria-label="向上">↑</button>
+            <button type="button" data-direction="down" aria-label="向下">↓</button>
+            <button type="button" data-direction="right" aria-label="向右">→</button>
+          </div>
+          <button type="button" id="touch-attack" class="attack-button" aria-label="攻击">攻击</button>
+        </div>
+      </section>
+
+      <aside class="guide">
+        <section class="guide-card guardian-card">
+          <div class="portrait"><img id="guardian-portrait" src="assets/guardian.webp" alt=""></div>
+          <div>
+            <h2>守灯人</h2>
+            <p>灯刃会击退附近的怪物。</p>
+          </div>
+        </section>
+
+        <section class="guide-card controls" id="controls-help" aria-labelledby="controls-title">
+          <h2 id="controls-title">操作</h2>
+          <dl>
+            <div><dt>移动</dt><dd><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> 或方向键</dd></div>
+            <div><dt>攻击</dt><dd><kbd>空格</kbd> 或点击战场</dd></div>
+            <div><dt>暂停</dt><dd><kbd>P</kbd> 或右上角按钮</dd></div>
+          </dl>
+          <p class="mobile-note">手机可使用战场下方的方向键和攻击按钮。</p>
+        </section>
+
+        <section class="guide-card high-score">
+          <h2>最高得分</h2>
+          <strong id="best-score">0</strong>
+        </section>
+      </aside>
+    </div>
+
+    <p class="game-message" id="game-message" role="status"></p>
+  </main>
+
+  <dialog id="asset-dialog" aria-labelledby="asset-title">
+    <div class="dialog-header">
+      <div>
+        <h2 id="asset-title">替换素材</h2>
+        <p>上传 PNG、WebP 或 JPG。角色和怪物适合用透明底图片。</p>
+      </div>
+      <button class="button close-button" id="close-assets" type="button" aria-label="关闭素材设置">×</button>
+    </div>
+    <div id="asset-slots" class="asset-slots"></div>
+    <p class="asset-note">每张最大 8 MB，最多 4096 × 4096 像素。所选图片会保存在当前浏览器。</p>
+    <p id="asset-message" class="asset-message" role="status"></p>
+    <div class="dialog-footer">
+      <button class="button primary" id="done-assets" type="button">完成</button>
+    </div>
+  </dialog>
+</body>
+</html>
