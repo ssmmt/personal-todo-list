@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>待办清单</title>
+  <style>
+    :root {
+      font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", system-ui, sans-serif;
+      color: #162a25;
+      background: #f2f5ef;
+    }
+
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    :focus-visible { outline: 3px solid #47764a; outline-offset: 4px; }
+    [hidden] { display: none !important; }
+
+    main {
+      width: min(100% - 32px, 680px);
+      margin: 76px auto 40px;
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      isolation: isolate;
+      padding: 36px 40px;
+      border-radius: 24px 24px 0 0;
+      background: #14372e;
+      color: #fff;
+    }
+
+    .hero::after {
+      content: '';
+      position: absolute;
+      z-index: -1;
+      top: -159px;
+      right: -136px;
+      width: 370px;
+      height: 370px;
+      border: 1px solid #61806a;
+      border-radius: 50%;
+      box-shadow: 0 0 0 22px #14372e, 0 0 0 23px #496b58,
+                  0 0 0 46px #14372e, 0 0 0 47px #395b4b;
+      pointer-events: none;
+    }
+
+    h1 { margin: 0 0 18px; font-size: clamp(2rem, 6vw, 2.75rem); letter-spacing: .04em; }
+    #counts { margin: 0; color: #e0edda; font-size: .94rem; font-variant-numeric: tabular-nums; }
+    .separator { padding-inline: .6em; color: #b3c8aa; }
+
+    .panel {
+      padding: 30px 40px 32px;
+      background: #fff;
+      border: 1px solid #dce5d9;
+      border-top: 0;
+      border-radius: 0 0 24px 24px;
+      box-shadow: 0 12px 28px #14372e0d;
+    }
+
+    .entry { display: flex; gap: 10px; }
+    #task-input {
+      flex: 1;
+      min-width: 0;
+      padding: 13px 14px;
+      border: 1px solid #aebfb2;
+      border-radius: 10px;
+      color: #162a25;
+      background: #f8fbf7;
+    }
+    #task-input::placeholder { color: #5a6b61; }
+    .add {
+      padding: 12px 18px;
+      border: 1px solid #bfda95;
+      border-radius: 10px;
+      background: #d0ebaa;
+      color: #173824;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .add:hover { background: #c0e093; }
+
+    .notice { margin: 12px 0 0; color: #a1292c; font-size: .9rem; }
+    .empty {
+      display: grid;
+      justify-items: center;
+      text-align: center;
+      margin-top: 24px;
+      padding: 34px 16px;
+      border: 1px dashed #bccdc0;
+      border-radius: 14px;
+      background: #f8faf6;
+    }
+    .empty-icon {
+      display: grid;
+      place-items: center;
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      background: #e7efdf;
+      color: #356044;
+      font-size: 21px;
+    }
+    .empty strong { margin-top: 12px; }
+    .empty p { margin: 6px 0 0; font-size: .9rem; color: #53675a; }
+
+    ul { list-style: none; margin: 24px 0 0; padding: 0; }
+    li { display: flex; align-items: center; gap: 8px; border-top: 1px solid #e0e8de; }
+    li:last-child { border-bottom: 1px solid #e0e8de; }
+    li label {
+      display: flex;
+      flex: 1;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+      min-height: 56px;
+      padding: 10px 4px;
+      cursor: pointer;
+    }
+    li input {
+      flex: 0 0 auto;
+      width: 20px;
+      height: 20px;
+      margin: 0;
+      accent-color: #32653d;
+      cursor: pointer;
+    }
+    .task-text { overflow-wrap: anywhere; }
+    li input:checked + .task-text { color: #55695d; text-decoration: line-through; }
+    .delete {
+      flex: 0 0 auto;
+      min-height: 44px;
+      padding: 6px 10px;
+      border: 0;
+      border-radius: 8px;
+      background: transparent;
+      color: #8d3435;
+    }
+    .delete:hover { background: #fbefef; }
+
+    footer {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 6px 16px;
+      padding: 14px 4px;
+      font-size: .84rem;
+      color: #4e6456;
+    }
+    footer a { color: #335b3d; padding-block: 3px; text-underline-offset: 3px; }
+    footer span { padding-block: 3px; }
+
+    @media (max-width: 520px) {
+      main { margin-top: 24px; }
+      .hero { padding: 27px 20px; }
+      .panel { padding: 20px; }
+      .add { padding-inline: 13px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header class="hero">
+      <h1>待办清单</h1>
+      <p id="counts" role="status">
+        <span id="remaining">0 项待完成</span><span class="separator" aria-hidden="true">·</span><span id="completed">0 项已完成</span>
+      </p>
+    </header>
+
+    <section class="panel" aria-label="任务">
+      <form id="task-form">
+        <div class="entry">
+          <input id="task-input" aria-label="新任务" placeholder="输入一件要做的事" type="text" required>
+          <button class="add" type="submit">添加</button>
+        </div>
+      </form>
+
+      <p id="storage-warning" class="notice" role="alert" hidden>浏览器暂时无法保存任务，刷新可能会丢失本次更改。</p>
+
+      <div id="empty" class="empty">
+        <span class="empty-icon" aria-hidden="true">✓</span>
+        <strong>清单还是空的</strong>
+        <p>在上方添加你的第一项任务。</p>
+      </div>
+      <ul id="task-list" aria-label="待办清单" hidden></ul>
+    </section>
+
+    <footer>
+      <span id="storage-note">任务自动保存在当前浏览器</span>
+      <a id="download" href="./" download="todo.html" hidden>下载离线版</a>
+    </footer>
+  </main>
+
+  <script>
+    const storageKey = 'personal-todo-cn-v1';
+    const form = document.querySelector('#task-form');
+    const taskInput = document.querySelector('#task-input');
+    const taskList = document.querySelector('#task-list');
+    const empty = document.querySelector('#empty');
+    const remaining = document.querySelector('#remaining');
+    const completed = document.querySelector('#completed');
+    const storageWarning = document.querySelector('#storage-warning');
+    const storageNote = document.querySelector('#storage-note');
+
+    const tasks = loadTasks();
+
+    if (location.protocol === 'https:' || location.protocol === 'http:') {
+      document.querySelector('#download').hidden = false;
+    }
+
+    function showStorageAvailability(available) {
+      storageWarning.hidden = available;
+      storageNote.hidden = !available;
+    }
+
+    function loadTasks() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(storageKey) ?? '[]');
+        if (Array.isArray(saved)) {
+          return saved.filter(task => typeof task?.text === 'string' && typeof task.done === 'boolean');
+        }
+      } catch {
+        showStorageAvailability(false);
+      }
+      return [];
+    }
+
+    function saveTasks() {
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(tasks));
+        showStorageAvailability(true);
+      } catch {
+        showStorageAvailability(false);
+      }
+    }
+
+    function updateSummary() {
+      const done = tasks.filter(task => task.done).length;
+      remaining.textContent = (tasks.length - done) + ' 项待完成';
+      completed.textContent = done + ' 项已完成';
+      empty.hidden = tasks.length > 0;
+      taskList.hidden = tasks.length === 0;
+    }
+
+    function addTaskRow(task) {
+      const row = document.createElement('li');
+      const label = document.createElement('label');
+      const checkbox = document.createElement('input');
+      const text = document.createElement('span');
+      const deleteButton = document.createElement('button');
+
+      checkbox.type = 'checkbox';
+      checkbox.checked = task.done;
+      text.className = 'task-text';
+      text.textContent = task.text;
+      label.append(checkbox, text);
+
+      deleteButton.type = 'button';
+      deleteButton.className = 'delete';
+      deleteButton.textContent = '删除';
+      deleteButton.setAttribute('aria-label', '删除任务：' + task.text);
+      row.append(label, deleteButton);
+      taskList.append(row);
+
+      checkbox.addEventListener('change', () => {
+        task.done = checkbox.checked;
+        saveTasks();
+        updateSummary();
+      });
+
+      deleteButton.addEventListener('click', () => {
+        const nearbyRow = row.nextElementSibling ?? row.previousElementSibling;
+        tasks.splice(tasks.indexOf(task), 1);
+        row.remove();
+        saveTasks();
+        updateSummary();
+        (nearbyRow?.querySelector('button') ?? taskInput).focus();
+      });
+    }
+
+    taskInput.addEventListener('input', () => taskInput.setCustomValidity(''));
+
+    form.addEventListener('submit', event => {
+      event.preventDefault();
+      const text = taskInput.value.trim();
+
+      if (!text) {
+        taskInput.setCustomValidity('请输入一件要做的事。');
+        taskInput.reportValidity();
+        return;
+      }
+
+      const task = { text, done: false };
+      tasks.push(task);
+      addTaskRow(task);
+      saveTasks();
+      updateSummary();
+      form.reset();
+      taskInput.focus();
+    });
+
+    tasks.forEach(addTaskRow);
+    updateSummary();
+  </script>
+</body>
+</html>
